@@ -13,7 +13,7 @@ This package provides an alternative canonical correlation/redundancy analysis f
 Package: \tab yacca\cr
 Type: \tab Package\cr
 Version: \tab 1.0\cr
-Date: \tab 2008-11-01\cr
+Date: \tab 2009-01-09\cr
 License: \tab GPL (>= 3)\cr
 LazyLoad: \tab yes\cr
 }

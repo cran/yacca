@@ -26,8 +26,8 @@ function(x,y,xlab=colnames(x),ylab=colnames(y),xcenter=TRUE,ycenter=TRUE,xscale=
    cxy<-cov(x,y,use=use)
    cyx<-t(cxy)
    #Find the projections
-   ex<-eigen(qr.solve(cxx,cxy)%*%qr.solve(cyy,cyx)) #cxx^-1 cxy cyy^-1 cyx
-   ey<-eigen(qr.solve(cyy,cyx)%*%qr.solve(cxx,cxy)) #cyy^-1 cyx cxx^-1 cxy
+   ey<-eigen(qr.solve(cyy,cyx)%*%qr.solve(cxx,cxy))
+   ex<-list(values=ey$values,vectors=qr.solve(cxx,cxy)%*%(ey$vec))
    o$corr<-(ex$val[1:ncv])^0.5
    names(o$corr)<-cvlab
    o$corrsq<-o$corr^2                                 #Get the variance accounted for by each canonical variate
@@ -45,12 +45,6 @@ function(x,y,xlab=colnames(x),ylab=colnames(y),xcenter=TRUE,ycenter=TRUE,xscale=
    o$canvary<-y%*%o$ycoef
    rownames(o$canvary)<-rownames(y)
    colnames(o$canvary)<-cvlab
-   for(i in 1:ncv){                #Annoying sign fix
-     if(cor(o$canvarx[,i],o$canvary[,i])<0){
-       o$ycoef[,i]<--o$ycoef[,i]
-       o$canvary[,i]<--o$canvary[,i]
-     }
-   }
    if(standardize.scores){         #If needed, standardize the scores/coefs
      sdx<-apply(o$canvarx,2,sd)
      sdy<-apply(o$canvary,2,sd)
@@ -101,8 +95,8 @@ function(x,y,xlab=colnames(x),ylab=colnames(y),xcenter=TRUE,ycenter=TRUE,xscale=
    o$chisq<-bartvbase*(sum(log(1-o$corr^2))-c(0,cumsum(log(1-o$corr^2))[-ncv]))
    o$df<-(nx+1-(1:ncv))*(ny+1-(1:ncv))
    names(o$chisq)<-cvlab
-   names(o$d)<-cvlab
-   o$xlab<-xlab                                                   #Save labels, just in case
+   names(o$df)<-cvlab
+   o$xlab<-xlab                                     #Save labels, just in case
    o$ylab<-ylab
    #print(eigen(solve(cxx)%*%cxy%*%solve(cyy)%*%cyx))   
    #Return the results

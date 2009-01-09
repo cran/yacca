@@ -83,7 +83,7 @@ As the name of the technique implies, CCA is a symmetric procedure: the designat
 %
 % ~Make other sections like Warning with \section{Warning }{....} ~
 %}
-\seealso{ \code{\link{cancor}}, \code{\link{princomp}} }
+\seealso{ \code{\link{F.test.cca}}, \code{\link{cancor}}, \code{\link{princomp}} }
 \examples{
 #Example parallels the R builtin cancor example
 data(LifeCycleSavings)

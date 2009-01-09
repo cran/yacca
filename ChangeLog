@@ -1,0 +1,10 @@
+CHANGELOG:
+
+v1.1 - Bug Fixes and New Functions
+  New Features:
+    - F.test.cca: F Test for Canonical Correlations Using Rao's Approximation
+      [Submitted by Nicholas Crookston]
+  Bug Fixes:
+    - cca would incorrectly flip signs in some cases.
+
+v1.0 - Initial Public Release
