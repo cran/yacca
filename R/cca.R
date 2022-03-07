@@ -1,5 +1,5 @@
 `cca` <-
-function(x,y,xlab=colnames(x),ylab=colnames(y),xcenter=TRUE,ycenter=TRUE,xscale=FALSE,yscale=FALSE,standardize.scores=TRUE,use="complete.obs",na.rm=TRUE){
+function(x, y, xlab=colnames(x), ylab=colnames(y), xcenter=TRUE, ycenter=TRUE, xscale=FALSE, yscale=FALSE, standardize.scores=TRUE, use="complete.obs", na.rm=TRUE, use.eigs=FALSE, max.dim=Inf, reg.param=NULL){
    #Perform the preliminaries
    if(is.data.frame(x))                  #Some routines require matrices...
      x<-as.matrix(x)
@@ -17,7 +17,7 @@ function(x,y,xlab=colnames(x),ylab=colnames(y),xcenter=TRUE,ycenter=TRUE,xscale=
    #Find out how large these data matrices are
    nx<-dim(x)[2]      
    ny<-dim(y)[2]
-   ncv<-min(nx,ny)
+   ncv<-min(nx,ny,max.dim)
    cvlab<-paste("CV",1:ncv)
    o<-list()
    #Get covariance matrices
@@ -25,9 +25,27 @@ function(x,y,xlab=colnames(x),ylab=colnames(y),xcenter=TRUE,ycenter=TRUE,xscale=
    cyy<-cov(y,use=use)
    cxy<-cov(x,y,use=use)
    cyx<-t(cxy)
+   #Regularize, if desired
+   if(!is.null(reg.param)){
+     reg.param<-rep(reg.param,length=2)
+     cxx<-cxx+diag(nx)*reg.param[1]
+     cyy<-cyy+diag(ny)*reg.param[2]
+   }
    #Find the projections
-   ey<-eigen(qr.solve(cyy,cyx)%*%qr.solve(cxx,cxy))
-   ex<-list(values=ey$values,vectors=qr.solve(cxx,cxy)%*%(ey$vec))
+   if(!use.eigs){ #More stable, but slower
+     ey<-eigen(solve(cyy,cyx)%*%solve(cxx,cxy))
+   }else{         #Less stable, but possibly faster
+     ey<-RSpectra::eigs(solve(cyy,cyx)%*%solve(cxx,cxy),k=ncv,which="LM")
+   }
+   #Note: we use Re to filter out tiny complex values that can arise
+   #due to numerical noise
+   ey$values<-Re(ey$values)
+   ey$vectors<-Re(ey$vectors)
+   #Debug info - uncomment to trace the solution
+   #print(solve(cyy,cyx)%*%solve(cxx,cxy))
+   #print(ey$val)
+   #print(eigen(solve(cyy,cyx)%*%solve(cxx,cxy))$val)
+   ex<-list(values=Re(ey$values),vectors=Re(solve(cxx,cxy)%*%(ey$vec)))
    o$corr<-(ex$val[1:ncv])^0.5
    names(o$corr)<-cvlab
    o$corrsq<-o$corr^2                                 #Get the variance accounted for by each canonical variate
@@ -98,6 +116,7 @@ function(x,y,xlab=colnames(x),ylab=colnames(y),xcenter=TRUE,ycenter=TRUE,xscale=
    names(o$df)<-cvlab
    o$xlab<-xlab                                     #Save labels, just in case
    o$ylab<-ylab
+   o$reg.param<-reg.param
    #print(eigen(solve(cxx)%*%cxy%*%solve(cyy)%*%cyx))   
    #Return the results
    class(o)<-"cca"

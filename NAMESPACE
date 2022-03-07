@@ -1,21 +1,14 @@
-# Default NAMESPACE created by R
-# Remove the previous line if you edit this file
+import(utils)
+import(stats)
+import(grDevices)
+import(graphics)
+
+#Register S3 methods
+S3method(plot,cca)
+S3method(print,cca)
+S3method(summary,cca)
+S3method(print,summary.cca)
+S3method(print,F.test.cca)
 
 # Export all names
 exportPattern(".")
-
-# Import all packages listed as Imports or Depends
-import(
-  utils
-)
-
-importFrom("grDevices", "rainbow")
-importFrom("graphics", "abline", "barplot", "lines", "par", "plot",
-           "plot.new", "plot.window", "polygon", "text", "title")
-importFrom("stats", "cor", "cov", "pchisq", "pf", "printCoefmat", "sd")
-
-S3method(plot, cca)
-S3method(print, F.test.cca)
-S3method(print, cca)
-S3method(print, summary.cca)
-S3method(summary, cca)

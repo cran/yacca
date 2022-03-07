@@ -1,17 +1,28 @@
-## .First.lib <- function(lib, pkg){
-##     if(R.version$major=="1"){
-##      ehelp <- help(package="yacca")$info[[2]][[2]]
-##      cat(paste("'",ehelp[4],"'\n",
-##                "Version ",ehelp[2],
-##                " created on ",ehelp[3],".\n", sep=""))
-##     }else{
-##      ehelp <- help(package="yacca")$info[[1]]
-##      cat(paste(substring(ehelp[3],first=16),"\n",
-##                "Version ",substring(ehelp[4],first=16),
-##                " created on ",
-##                 substring(ehelp[5],first=16),".\n", sep=""))
-##     }
-##     cat("Copyright (c) 2008, Carter T. Butts, University of California-Irvine\n")
-##     cat('For citation information, type citation("yacca").\n')
-##     cat('Type help("yacca-package") to get started.\n')
-## }
+######################################################################
+#
+# zzz.R
+#
+# copyright (c) 2018, Carter T. Butts <buttsc@uci.edu>
+# Last Modified 2/25/18
+# Licensed under the GNU General Public License version 3
+#
+# Part of the R/yacca package; based on the zzz.R files from sna
+# and other statnet packages (all hail).
+#
+# .onAttach is run when the package is loaded with library(yacca)
+#
+######################################################################
+
+
+.onAttach <- function(libname, pkgname){
+  temp<-packageDescription("yacca")
+  msg<-paste(temp$Package,": ",temp$Title,"\n",
+      "Version ",temp$Version,
+      " created on ",
+      temp$Date,".\n", sep="")
+  msg<-paste(msg,"copyright (c) 2008, Carter T. Butts, University of California-Irvine\n",sep="")
+  msg<-paste(msg,'For citation information, type citation("yacca").\n')
+  msg<-paste(msg,'Type help("yacca-package") to get started.\n')
+  packageStartupMessage(msg)
+}
+

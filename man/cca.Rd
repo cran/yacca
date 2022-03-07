@@ -12,7 +12,8 @@
 \usage{
 cca(x, y, xlab = colnames(x), ylab = colnames(y), xcenter = TRUE, 
     ycenter = TRUE, xscale = FALSE, yscale = FALSE,
-    standardize.scores = TRUE, use = "complete.obs", na.rm = TRUE)
+    standardize.scores = TRUE, use = "complete.obs", na.rm = TRUE,
+    use.eigs = FALSE, max.dim = Inf, reg.param = NULL)
 
 \method{plot}{cca}(x, \dots)
 
@@ -33,11 +34,14 @@ cca(x, y, xlab = colnames(x), ylab = colnames(y), xcenter = TRUE,
   \item{standardize.scores}{ boolean; rescale scores (and coefficients) to produce scores of unit variance?}
   \item{use}{ \code{use} argument to be passed to \code{\link{var}} when creating covariance matrices. }
   \item{na.rm}{ boolean; remove missing values during redundancy analysis? }
+  \item{use.eigs}{boolean; use \code{\link[RSpectra]{eigs}} instead of \code{\link{eigen}} for diagonalization?}
+  \item{max.dim}{ maximum number of canonical variates to extract (only relevant if less than the minimum of the number of columns of \code{x} and \code{y})}
+  \item{reg.param}{ an optional L2 regularization parameter (or vector thereof). }
   \item{object}{ a \code{cca} object.}
   \item{\dots}{ additional arguments.}
 }
 \details{
-Canonical correlation analysis (CCA) is a form of linear subspace analysis, and involves the projection of two sets of vectors (here, the variable sets \code{x} and \code{y}) onto a joint subspace.  The goal of (CCA) is to find a squence of linear transformations of each variable set, such that the correlations between the transformed variables are maximized (under the proviso that each transformed variable must be orthogonal to those preceding it).  These transformed variables -- known as \dQuote{canonical variates} (CVs) -- can be thought of as expressing the common variation across the data sets, in a manner analogous to the role of principal components in within-set analysis (see, e.g., \code{\link{princomp}}).  Since the rank of the joint subspace is equal to the minimum of the ranks of the two spaces spanned by the initial data vectors, it follows that the number of CVs will usually be equal to the minimum of the number of \code{x} and \code{y} variables (perhaps fewer, if the sets are not of full rank).
+Canonical correlation analysis (CCA) is a form of linear subspace analysis, and involves the projection of two sets of vectors (here, the variable sets \code{x} and \code{y}) onto a joint subspace.  The goal of (CCA) is to find a squence of linear transformations of each variable set, such that the correlations between the transformed variables are maximized (under the proviso that each transformed variable must be orthogonal to those preceding it).  These transformed variables -- known as \dQuote{canonical variates} (CVs) -- can be thought of as expressing the common variation across the data sets, in a manner analogous to the role of principal components in within-set analysis (see, e.g., \code{\link{princomp}}).  Since the rank of the joint subspace is equal to the minimum of the ranks of the two spaces spanned by the initial data vectors, it follows that the number of CVs will usually be equal to the minimum of the number of \code{x} and \code{y} variables (perhaps fewer, if the sets are not of full rank or if \code{max.dim} is used to constrain the number of variables extracted).
 
 Formally, we may describe the CCA solution as follows.  Given data matrices \eqn{X} and \eqn{Y}, let \eqn{\Sigma_{XX}}{Cxx}, \eqn{\Sigma_{XY}}{Cxy}, \eqn{\Sigma_{YX}}{Cyx} and \eqn{\Sigma_{YY}}{Cyy} be the respective sample covariance matrices for \eqn{X} versus itself, \eqn{X} versus \eqn{Y}, \eqn{Y} versus \eqn{X}, and \eqn{Y} versus itself.  Now, for some \eqn{i} less than or equal to the minimum rank of \eqn{X} and \eqn{Y}, let \eqn{u_i} be the \eqn{i}th eigenvector of \eqn{\Sigma_{XX}^{-1} \Sigma_{XY} \Sigma_{YY}^{-1} \Sigma_{YX}}{Cxx^-1 \%*\% Cxy \%*\% Cyy^-1 \%*\% Cyx}, with corresponding eigenvalue \eqn{\lambda_i}.  Then the vector \eqn{u_i} contains the coefficients projecting \eqn{X} onto the \eqn{i
 }th canonical variate; the corresponding scores are given by \eqn{X u_i}{X \%*\% u_i}.  Similarly, let \eqn{v_i} be the \eqn{i}th eigenvector of \eqn{\Sigma_{YY}^{-1} \Sigma_{YX} \Sigma_{XX}^{-1} \Sigma_{XY}}{Cyy^-1 \%*\% Cyx \%*\% Cxx^-1 \%*\% Cxy}.  Then \eqn{v_i} contains the coefficients projecting \eqn{Y} onto the \eqn{i}th canonical variate (with scores \eqn{Y v_i}{Y \%*\% v_i}).  The eigenvalue in the second case will be the same as the first, and corresponds to the square of the \eqn{i}th canonical correlation for the CCA solution -- that is, the correlation between the \eqn{X} and \eqn{Y} scores on the \eqn{i}th canonical variate.  Since the canonical correlation structure is unaffected by rescaling of the canonical variate scores, it is common to adjust the coefficients \eqn{u_i} and \eqn{v_i} to ensure that the resulting scores have unit variance; this option is controlled here via the \code{standardize.scores} argument.
@@ -47,6 +51,8 @@ CCA output can be fairly complex.  Quantities of particular interest include the
 A common interest in the context of CCA is the extent to which the variance of one set of variables can be accounted for by the other (in the usual least squares sense).  While it is tempting to interpret the squared canonical correlations in this manner, this is incorrect: the squared canonical correlations convey the fraction of variance in the CV scores from one variable set which can be accounted for by scores from the other, but say nothing about the extent to which the CVs themselves account for variation in the original variables.  The variance in one set explainable by the other is instead expressed via the so-called \emph{redundancy index}, which combines the squared canonical correlations with the \emph{canonical adequacy} (within-set variance accounted for) for each CV.  The use of the redundancy index in this way is sometimes called \dQuote{(canonical) redundancy analysis}, although it is simply an alternate means of presenting CCA results.
 
 As the name of the technique implies, CCA is a symmetric procedure: the designation of one variable set as \code{x} and another as \code{y} is arbitrary, and may be reversed without incident.  (Note, however, that the coefficients and redundancies are set-specific, and will also be reversed in this case.)  CCA with one \code{x} or \code{y} variable is equivalent to OLS regression (with the squared canonical correlation corresponding to the \eqn{R^2}), and CCA on one variable pair yields the familiar Pearson product-moment correlation.  Centering and scaling data prior to analysis is equivalent to working with correlation matrices in the underlying analysis (with interpretation/effects analogous to the principal components case).
+
+Finding the CCA solution can pose numerical challenges, ironically more so when the degree of potential dimension reduction is highest.  In recalcitrant cases, it can be useful to apply regularization to the solution for purposes of stabilization.  The optional \code{reg.param} can be used for this purpose: if given as a single numeric value, it adds an L2 (aka \dQuote{ridge}) penalty to each variable set with the corresponding multiplier value.  \code{reg.param} can also be given as a vector of length 2, in which case the first value is applied to the \code{x} variables and the second is applied to the \code{y} variables.  Relatedly, in high-dimension/low-rank problems it can be useful to extract a much smaller number of canonical variates than the nominal maximum.  This can be controlled by \code{max.dim}, though the default diagonalization method computes the entire eigendecomposition prior to canonical variate extraction.  In such cases, it can be helpful to employ the alternative diagonalization method controlled by the \code{use.eigs} argument to compute only those dimensions that are actually required.  Experience suggests that this method (\code{\link[RSpectra]{eigs}}) is less stable than the base \code{\link{eigen}}, but it can be much faster in high-dimensional settings.
 }
 \value{
   An object of class \code{cca}, whose elements are as follows:
@@ -76,6 +82,7 @@ As the name of the technique implies, CCA is a symmetric procedure: the designat
   \item{df }{Degrees of freedom for Bartlett's test.}
   \item{xlab }{Variable names for \code{x}.}
   \item{ylab }{Variable names for \code{y}.}
+  \item{reg.param }{Regularization parameter (if any).}
 }
 \references{ Mardia, K. V.; Kent, J. T.; and Bibby, J. M.  1979.  \emph{Multivariate Analysis}.  London: Academic Press. }
 \author{ Carter T. Butts <buttsc@uci.edu> }
@@ -90,11 +97,13 @@ data(LifeCycleSavings)
 pop <- LifeCycleSavings[, 2:3]
 oec <- LifeCycleSavings[, -(2:3)]
 cca.fit <- cca(pop, oec)
+cca.regfit <- cca(pop, oec, reg.param=1) # Some minimal regularization
 
 #View the results
 cca.fit
 summary(cca.fit)
 plot(cca.fit)
+cca.regfit       #Not a vast difference, usually....
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
